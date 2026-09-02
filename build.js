@@ -1,1 +1,2 @@
 const fs=require('fs');const path=require('path');const out=path.join(__dirname,'dist');fs.mkdirSync(out,{recursive:true});for(const file of ['index.html','style.css','script.js'])fs.copyFileSync(path.join(__dirname,file),path.join(out,file));fs.mkdirSync(path.join(out,'.openai'),{recursive:true});fs.copyFileSync(path.join(__dirname,'.openai','hosting.json'),path.join(out,'.openai','hosting.json'));console.log('Static site prepared in dist.');
+
