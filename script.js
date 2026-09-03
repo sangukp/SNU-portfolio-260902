@@ -2,23 +2,27 @@ const button=document.querySelector('.menu'),nav=document.querySelector('#nav-li
 
 const coverflow=document.querySelector('[data-coverflow]');
 if(coverflow){
-  const cards=[...coverflow.querySelectorAll('.coverflow-card')],dots=coverflow.querySelector('[data-coverflow-dots]'),previous=coverflow.querySelector('[data-coverflow-prev]'),next=coverflow.querySelector('[data-coverflow-next]');
-  let activeIndex=Math.min(1,cards.length-1);
-  const render=()=>{
+  const cards=[...coverflow.querySelectorAll('.coverflow-card')];
+  const center=(cards.length-1)/2;
+  const updateArc=()=>{
+    const gap=Math.min(70,window.innerWidth<650?52:70);
     cards.forEach((card,index)=>{
-      const offset=index-activeIndex,absoluteOffset=Math.abs(offset),past=index<activeIndex;
-      card.style.transform=`translateX(calc(-50% + ${offset*104}px)) rotateY(${offset===0?0:past?38:-38}deg) translateZ(${offset===0?50:-absoluteOffset*50}px) scale(${offset===0?1.08:Math.max(.78,1-absoluteOffset*.08)})`;
-      card.style.opacity=absoluteOffset>2?'0':String(1-absoluteOffset*.25);
-      card.style.zIndex=String(100-absoluteOffset);
-      card.setAttribute('aria-current',String(index===activeIndex));
+      const distance=index-center;
+      const ratio=center?distance/center:0;
+      const outer=Math.abs(distance)===center;
+      card.style.setProperty('--arc-x',`${ratio*gap}px`);
+      card.style.setProperty('--arc-rotate',`${ratio*30}deg`);
+      card.style.setProperty('--arc-y',`${outer?10:-2}px`);
+      card.style.setProperty('--arc-scale',distance===0?'1.05':'1');
+      card.style.zIndex=String(3-Math.abs(distance));
     });
-    [...dots.children].forEach((dot,index)=>dot.setAttribute('aria-current',String(index===activeIndex)));
-    previous.disabled=activeIndex===0;next.disabled=activeIndex===cards.length-1;
   };
-  const setActive=index=>{activeIndex=Math.max(0,Math.min(cards.length-1,index));render()};
-  cards.forEach((card,index)=>{card.addEventListener('click',event=>{if(event.target.closest('a'))return;setActive(index)});card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setActive(index)}});const dot=document.createElement('button');dot.type='button';dot.className='coverflow-dot';dot.setAttribute('aria-label',`Show research ${index+1}`);dot.addEventListener('click',()=>setActive(index));dots.append(dot)});
-  previous.addEventListener('click',()=>setActive(activeIndex-1));next.addEventListener('click',()=>setActive(activeIndex+1));
-  coverflow.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'){event.preventDefault();setActive(activeIndex-1)}if(event.key==='ArrowRight'){event.preventDefault();setActive(activeIndex+1)}});
-  render();
+  const expand=()=>coverflow.classList.add('is-expanded');
+  const collapse=()=>coverflow.classList.remove('is-expanded');
+  coverflow.addEventListener('pointerenter',expand);
+  coverflow.addEventListener('pointerleave',collapse);
+  coverflow.addEventListener('focusin',expand);
+  coverflow.addEventListener('focusout',event=>{if(!coverflow.contains(event.relatedTarget))collapse()});
+  window.addEventListener('resize',updateArc);
+  updateArc();
 }
-
